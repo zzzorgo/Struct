@@ -7,5 +7,7 @@ project ("Struct")
 set(MAIN_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MAIN_BUILD_DIR})
 
+set(CMAKE_CXX_STANDARD 11)
+
 # Include sub-projects.
 add_subdirectory ("Struct")
