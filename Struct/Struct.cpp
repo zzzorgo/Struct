@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <fstream> 
 #include <iterator>
-#include <conio.h>
 
 using namespace std;
 
@@ -16,10 +15,7 @@ class LetterProbability {
 	double probability;
 	int letterCount;
 
-	LetterProbability() {
-		probability = 0;
-		letterCount = 0;
-	}
+	LetterProbability() : probability(0), letterCount(0) { }
 };
 
 ostream &operator<<(std::ostream &os, LetterProbability const &lp) { 
@@ -34,16 +30,13 @@ public:
 	TreeNode *leftNode;
 	TreeNode *rightNode;
 
-	TreeNode(LetterProbability initialNodeL) {
-		initialNode = initialNodeL;
-		priority = initialNode.letterCount;
-		leftNode = NULL;
-		rightNode = NULL;
-	}
+	TreeNode(LetterProbability initialNodeL) :
+		initialNode(initialNodeL),
+		priority(initialNodeL.letterCount),
+		leftNode(nullptr),
+		rightNode(nullptr) { }
 
-	TreeNode() {
-		priority = 0;
-	}
+	TreeNode() : priority(0) { }
 };
 
 int main()
@@ -90,34 +83,30 @@ int main()
 		cout << lp << endl;
 	}
 
-	vector<TreeNode>treeVector;
+	vector<TreeNode*>treeVector;
 
 	for (LetterProbability lp : letterProbability) {
-		treeVector.push_back(TreeNode(lp));
+		treeVector.push_back(new TreeNode(lp));
 	}
 
-	for (int i = 0; i < letterProbability.size()-1; i++) {
-		TreeNode firstNode = treeVector[0];
-		TreeNode secondNode = treeVector[1];
+	for (int i = 0; i < letterProbability.size() - 1; i++) {
+		TreeNode* firstNode = treeVector[0];
+		TreeNode* secondNode = treeVector[1];
+
+		TreeNode* newNode = new TreeNode();
+		(*newNode).priority = (*firstNode).priority + (*secondNode).priority;
+
+		(*newNode).leftNode = firstNode;
+		(*newNode).rightNode = secondNode;
+
 		treeVector.erase(treeVector.begin());
 		treeVector.erase(treeVector.begin());
-
-		TreeNode newNode = TreeNode();
-		newNode.priority = firstNode.priority + secondNode.priority;
-
-		auto p = &firstNode;
-
-		newNode.leftNode = p;
-		newNode.rightNode = &secondNode;
 
 		treeVector.push_back(newNode);
-		sort(treeVector.begin(), treeVector.end(), [](const TreeNode& a, const TreeNode& b) {
-			return a.priority < b.priority;
+		sort(treeVector.begin(), treeVector.end(), [](const TreeNode *a, const TreeNode *b) {
+			return a->priority < b->priority;
 		});
-		int a = 0;
 	}
 
-	
-	getch();
 	return 0;
 }
