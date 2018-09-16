@@ -1,11 +1,12 @@
 ﻿// Struct.cpp : Defines the entry point for the application.
 //
-#include "stdafx.h"
 #include "Struct.h"
 #include <vector>
 #include <algorithm>
 #include <fstream> 
 #include <iterator>
+#include <stdio.h>
+#include <tchar.h>
 
 using namespace std;
 
