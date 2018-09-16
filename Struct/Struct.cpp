@@ -1,31 +1,31 @@
 ﻿// Struct.cpp : Defines the entry point for the application.
 //
-
 #include "Struct.h"
 #include <vector>
 #include <algorithm>
 #include <fstream> 
 #include <iterator>
+#include <stdio.h>
+#include <tchar.h>
 
 using namespace std;
 
 class LetterProbability {
 	public: 
 	char letter;
-	double probability;
 	int letterCount;
-
-	LetterProbability() : probability(0), letterCount(0) { }
+	string prefix;
+	LetterProbability() : letterCount(0), prefix("") { }
 };
 
 ostream &operator<<(std::ostream &os, LetterProbability const &lp) { 
-    return os << lp.letter << " " << lp.letterCount << " " << lp.probability << endl;
+    return os << lp.letter << " " << lp.letterCount << endl;
 }
-
 
 class TreeNode {
 public:
 	int priority;
+	string prefix;
 	LetterProbability initialNode;
 	TreeNode *leftNode;
 	TreeNode *rightNode;
@@ -34,9 +34,87 @@ public:
 		initialNode(initialNodeL),
 		priority(initialNodeL.letterCount),
 		leftNode(nullptr),
-		rightNode(nullptr) { }
+		rightNode(nullptr),
+		prefix("") { }
 
-	TreeNode() : priority(0) { }
+	TreeNode() : priority(0),
+				 prefix("") { }
+
+	void startWalker() {
+		leftTreePrefix(this);
+		rightTreePrefix(this);
+	}
+
+	vector<LetterProbability> startWalkerGatherPrefix() {
+		vector<LetterProbability> letterDictionary;
+
+		vector<LetterProbability> leftLetterDictionary = leftTreePrefixGather(this);
+		letterDictionary.insert(letterDictionary.end(), leftLetterDictionary.begin(), leftLetterDictionary.end());
+		vector<LetterProbability> rightLetterDictionary = rightTreePrefixGather(this);
+		letterDictionary.insert(letterDictionary.end(), rightLetterDictionary.begin(), rightLetterDictionary.end());
+
+		return letterDictionary;
+	}
+
+private:
+	void leftTreePrefix(TreeNode *node) {
+		TreeNode *leftNode = node->leftNode;
+		if (!leftNode) {
+			return;
+		}
+		leftNode->prefix = node->prefix + '0';
+		leftTreePrefix(leftNode);
+		rightTreePrefix(leftNode);
+	}
+
+	void rightTreePrefix(TreeNode *node) {
+		TreeNode *rightNode = node->rightNode;
+		if (!rightNode) {
+			return;
+		}
+		rightNode->prefix = node->prefix + '1';
+		leftTreePrefix(rightNode);
+		rightTreePrefix(rightNode);
+	}
+
+	vector<LetterProbability> leftTreePrefixGather(TreeNode *node) {
+		vector<LetterProbability> letterDictionary;
+		TreeNode *leftNode = node->leftNode;
+		if (!leftNode) {
+			LetterProbability lp = LetterProbability();
+			lp.letter = node->initialNode.letter;
+			lp.prefix = node->prefix;
+			letterDictionary.push_back(lp);
+			return letterDictionary;
+		}
+
+		vector<LetterProbability> leftLetterDictionary = leftTreePrefixGather(leftNode->leftNode);
+		letterDictionary.insert(letterDictionary.end(), leftLetterDictionary.begin(), leftLetterDictionary.end());
+
+		vector<LetterProbability> rightLetterDictionary = rightTreePrefixGather(leftNode->leftNode);
+		letterDictionary.insert(letterDictionary.end(), rightLetterDictionary.begin(), rightLetterDictionary.end());
+
+		return letterDictionary;
+	}
+
+	vector<LetterProbability> rightTreePrefixGather(TreeNode *node) {
+		vector<LetterProbability> letterDictionary;
+		TreeNode *rightNode = node->rightNode;
+		if (!rightNode) {
+			LetterProbability lp = LetterProbability();
+			lp.letter = node->initialNode.letter;
+			lp.prefix = node->prefix;
+
+			letterDictionary.push_back(lp);
+			return letterDictionary;
+		}
+
+		vector<LetterProbability> leftLetterDictionary = leftTreePrefixGather(rightNode);
+		letterDictionary.insert(letterDictionary.end(), leftLetterDictionary.begin(), leftLetterDictionary.end());
+		vector<LetterProbability> rightLetterDictionary = rightTreePrefixGather(rightNode);
+		letterDictionary.insert(letterDictionary.end(), rightLetterDictionary.begin(), rightLetterDictionary.end());
+		return letterDictionary;
+	}
 };
 
 int main()
@@ -45,12 +123,13 @@ int main()
 	if (!charFile) {
 		return -1;
 	}
-	istream_iterator<char> start(charFile), end;
-	vector<char> text(start, end);
-    copy(text.begin(), text.end(),
+	vector<char> text;
+	charFile >> noskipws;
+	copy(istream_iterator<char>(charFile), istream_iterator<char>(),
+		std::back_inserter(text));
+	copy(text.begin(), text.end(),
 		ostream_iterator<char>(cout));
 	cout << endl;
-
 
 	vector<LetterProbability> letterProbability;
 
@@ -78,11 +157,6 @@ int main()
 		return a.letterCount < b.letterCount;
 	});
 
-	for (auto lp : letterProbability) {
-		lp.probability = (double)lp.letterCount / text.size();
-		cout << lp << endl;
-	}
-
 	vector<TreeNode*>treeVector;
 
 	for (LetterProbability lp : letterProbability) {
@@ -108,5 +182,8 @@ int main()
 		});
 	}
 
+	TreeNode *topNode = treeVector[0];
+	topNode->startWalker();
+	vector<LetterProbability> lp = topNode->startWalkerGatherPrefix();
 	return 0;
 }
